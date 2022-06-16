@@ -442,15 +442,33 @@ router.delete(
 // @desc    Delete user and profile
 // @access  Private
 router.delete(
-  '/',
-  passport.authenticate('jwt', { session: false }),
+  '/:user_id',
   (req, res) => {
-    Profile.findOneAndRemove({ user: req.user.id }).then(() => {
-      User.findOneAndRemove({ _id: req.user.id }).then(() =>
+    Profile.findOneAndRemove( req.id ).then(() => {
+
         res.json({ success: true })
-      );
     });
   }
 );
+
+
+// @route   Get api/profile/banks
+// @desc    Get all current banks
+// @access  Public
+router.get('/banks/all', (req, res) => {
+  const errors = {};
+
+  Profile.find({ banks : { $exists: true }})
+    .populate('banks', ['label', 'balance','type'])
+    .then(banks => {
+      if (!banks) {
+        errors.nobanks = 'There are no banks';
+        return res.status(404).json(errors);
+      }
+
+      res.json(banks);
+    })
+    .catch(err => res.status(404).json({ profile: 'There are no profiles' }));
+});
 
 module.exports = router;
